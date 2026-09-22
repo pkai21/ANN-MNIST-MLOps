@@ -1,0 +1,29 @@
+# Virtual environment
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Pytest
+.pytest_cache/
+
+# Dataset
+data/
+
+# Trained model
+models/*.pth
+
+# Jupyter
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/
+
+# MLflow
+mlruns/
+
+# OS
+.DS_Store
+Thumbs.db
