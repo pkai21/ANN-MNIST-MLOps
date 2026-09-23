@@ -1,3 +1,5 @@
+import json
+import os
 import torch
 from torch.utils.data import DataLoader
 from model import ANN
@@ -64,6 +66,24 @@ def evaluate():
     print(f"Accuracy (%)  : {accuracy * 100:.2f}%")
 
     print("=" * 50)
+
+    metadata = {
+        "model": "ANN-MNIST",
+        "version": os.getenv("GITHUB_SHA", "local"),
+        "accuracy": accuracy,
+        "accuracy_percent": accuracy * 100,
+        "test_loss": average_loss,
+        "threshold": 0.95,
+        "epochs": 5,
+        "learning_rate": 0.001
+    }
+
+    os.makedirs("models", exist_ok=True)
+
+    with open("models/model_metadata.json", "w") as f:
+        json.dump(metadata, f, indent=4)
+
+    print("Model metadata saved to models/model_metadata.json")
 
     return accuracy
 

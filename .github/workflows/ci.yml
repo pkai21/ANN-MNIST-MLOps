@@ -46,5 +46,7 @@ jobs:
       - name: Upload model artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ann-mnist-model
-          path: models/ann_mnist.pth
+          name: ann-mnist-model-${{ github.sha }}
+          path: |
+            models/ann_mnist.pth
+            models/model_metadata.json
