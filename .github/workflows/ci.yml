@@ -38,7 +38,13 @@ jobs:
       - name: Train model
         run: |
           python src/train.py
-      
+
       - name: Evaluate model
         run: |
           python src/evaluate.py
+
+      - name: Upload model artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ann-mnist-model
+          path: models/ann_mnist.pth
