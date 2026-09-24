@@ -31,6 +31,15 @@ jobs:
           python -m pip install torch==2.14.0 torchvision==0.29.0 --index-url https://download.pytorch.org/whl/cpu
           python -m pip install pytest==8.4.2
 
+      - name: Start API server
+        run: |
+          python -m uvicorn src.api:app --host 127.0.0.1 --port 8000 > api.log 2>&1 &
+          python -c "import time; time.sleep(5)"
+
+      - name: Check API server
+        run: |
+          curl --fail http://127.0.0.1:8000/health
+
       - name: Run tests
         run: |
           python -m pytest
