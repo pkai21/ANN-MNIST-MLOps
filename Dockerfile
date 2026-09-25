@@ -1,14 +1,53 @@
 FROM python:3.12-slim
 
+# ============================================================
+# Working directory
+# ============================================================
+
 WORKDIR /app
+
+
+# ============================================================
+# Install dependencies
+# ============================================================
 
 COPY requirements.txt .
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN python -m pip install --upgrade pip && \
+    python -m pip install \
+        torch==2.14.0 \
+        torchvision==0.29.0 \
+        --index-url https://download.pytorch.org/whl/cpu && \
+    python -m pip install \
+        fastapi \
+        uvicorn \
+        requests \
+        pytest==8.4.2
 
-COPY src ./src
-COPY models ./models
+
+# ============================================================
+# Copy application source code
+# ============================================================
+
+COPY src/ ./src/
+
+
+# ============================================================
+# Copy trained model
+# ============================================================
+
+COPY models/ ./models/
+
+
+# ============================================================
+# Expose API port
+# ============================================================
 
 EXPOSE 8000
+
+
+# ============================================================
+# Start FastAPI
+# ============================================================
 
 CMD ["python", "-m", "uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]
