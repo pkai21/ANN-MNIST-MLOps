@@ -15,4 +15,4 @@ tests
 
 *.md
 
-Add-Content .gitignore "models/"
+models/
