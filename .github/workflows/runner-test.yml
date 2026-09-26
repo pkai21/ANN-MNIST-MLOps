@@ -1,0 +1,39 @@
+name: Test Self Hosted Runner
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test-runner:
+
+    runs-on: [self-hosted, linux, x64]
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Show runner information
+        run: |
+          echo "===== HOSTNAME ====="
+          hostname
+
+          echo "===== USER ====="
+          whoami
+
+          echo "===== WORKING DIRECTORY ====="
+          pwd
+
+      - name: Check Git
+        run: |
+          git --version
+
+      - name: Check Docker
+        run: |
+          docker --version
+
+      - name: Check Docker Compose
+        run: |
+          docker compose version
