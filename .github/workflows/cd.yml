@@ -7,29 +7,108 @@ on:
     types:
       - completed
 
+permissions:
+  actions: read
+  contents: read
+
 jobs:
 
   deploy:
 
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    # Chỉ deploy khi:
+    # 1. CI thành công
+    # 2. CI được chạy từ branch main
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main'
 
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64]
 
     steps:
+
+      # ============================================================
+      # 1. Checkout source code
+      # ============================================================
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+
+      # ============================================================
+      # 2. Download model artifact từ CI
+      # ============================================================
 
       - name: Download model artifact
         uses: actions/download-artifact@v4
         with:
           name: ann-mnist-model-${{ github.event.workflow_run.head_sha }}
-          path: model
+          path: models
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
 
+
+      # ============================================================
+      # 3. Verify model
+      # ============================================================
+
       - name: Verify model artifact
         run: |
-          echo "Downloaded model:"
-          ls -lh model
+          echo "Checking downloaded model..."
 
-      - name: Show metadata
+          test -f models/ann_mnist.pth
+
+          echo "Model file:"
+          ls -lh models/ann_mnist.pth
+
+
+      # ============================================================
+      # 4. Build Docker image
+      # ============================================================
+
+      - name: Build Docker image
         run: |
-          cat model/model_metadata.json
+          docker compose build
+
+
+      # ============================================================
+      # 5. Deploy container
+      # ============================================================
+
+      - name: Deploy application
+        run: |
+          docker compose up -d
+
+
+      # ============================================================
+      # 6. Check container status
+      # ============================================================
+
+      - name: Check container
+        run: |
+          docker compose ps
+
+
+      # ============================================================
+      # 7. Health check
+      # ============================================================
+
+      - name: Health check
+        run: |
+          echo "Waiting for API..."
+
+          for i in {1..10}; do
+            if curl --fail http://127.0.0.1:8000/health; then
+              echo ""
+              echo "API is healthy!"
+              exit 0
+            fi
+
+            echo "API not ready yet..."
+            sleep 3
+          done
+
+          echo "API health check failed."
+
+          docker compose logs
+
+          exit 1
