@@ -152,3 +152,4 @@ jobs:
           name: ann-mnist-model-${{ github.sha }}
           path: |
             models/ann_mnist.pth
+            models/model_metadata.json

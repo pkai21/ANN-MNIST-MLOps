@@ -1,6 +1,10 @@
-import torch
+import json
 import os
+from datetime import datetime, timezone
+
+import torch
 from torch.utils.data import DataLoader
+
 from model import ANN
 from data import get_datasets
 
@@ -8,9 +12,13 @@ from data import get_datasets
 def train():
     train_dataset, _ = get_datasets()
 
+    batch_size = 64
+    learning_rate = 0.001
+    epochs = 5
+
     train_loader = DataLoader(
         train_dataset,
-        batch_size=64,
+        batch_size=batch_size,
         shuffle=True
     )
 
@@ -20,10 +28,8 @@ def train():
 
     optimizer = torch.optim.Adam(
         model.parameters(),
-        lr=0.001
+        lr=learning_rate
     )
-
-    epochs = 5
 
     for epoch in range(epochs):
 
@@ -45,21 +51,77 @@ def train():
 
             total_loss += loss.item()
 
+        average_loss = total_loss / len(train_loader)
+
         print(
             f"Epoch {epoch + 1}/{epochs}, "
-            f"Loss: {total_loss / len(train_loader):.4f}"
+            f"Loss: {average_loss:.4f}"
         )
 
-    # Tạo thư mục models nếu chưa tồn tại
+    # ============================================================
+    # Save model
+    # ============================================================
+
     os.makedirs("models", exist_ok=True)
 
-    # Lưu model
+    model_path = "models/ann_mnist.pth"
+
     torch.save(
         model.state_dict(),
-        "models/ann_mnist.pth"
+        model_path
     )
 
-    print("Model saved to models/ann_mnist.pth")
+    print(f"Model saved to: {model_path}")
+
+    # ============================================================
+    # Create model metadata
+    # ============================================================
+
+    metadata = {
+        "model_name": "ANN-MNIST",
+
+        "model_version": os.getenv(
+            "MODEL_VERSION",
+            "dev"
+        ),
+
+        "git_commit": os.getenv(
+            "GITHUB_SHA",
+            "local"
+        ),
+
+        "training_date": datetime.now(
+            timezone.utc
+        ).isoformat(),
+
+        "epochs": epochs,
+
+        "learning_rate": learning_rate,
+
+        "batch_size": batch_size,
+
+        "test_loss": None,
+
+        "test_accuracy": None
+    }
+
+    metadata_path = "models/model_metadata.json"
+
+    with open(
+        metadata_path,
+        "w",
+        encoding="utf-8"
+    ) as f:
+
+        json.dump(
+            metadata,
+            f,
+            indent=2
+        )
+
+    print(
+        f"Metadata saved to: {metadata_path}"
+    )
 
 
 if __name__ == "__main__":

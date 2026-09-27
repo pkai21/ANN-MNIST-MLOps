@@ -56,9 +56,15 @@ jobs:
           echo "Checking downloaded model..."
 
           test -f models/ann_mnist.pth
+          test -f models/model_metadata.json
 
-          echo "Model file:"
+          echo ""
+          echo "===== MODEL FILE ====="
           ls -lh models/ann_mnist.pth
+
+          echo ""
+          echo "===== MODEL METADATA ====="
+          cat models/model_metadata.json
 
 
       # ============================================================

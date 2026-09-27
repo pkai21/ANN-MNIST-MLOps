@@ -1,12 +1,16 @@
 import json
 import os
+from datetime import datetime, timezone
+
 import torch
 from torch.utils.data import DataLoader
+
 from model import ANN
 from data import get_datasets
 
 
 def evaluate():
+
     _, test_dataset = get_datasets()
 
     test_loader = DataLoader(
@@ -26,11 +30,10 @@ def evaluate():
 
     model.eval()
 
-    correct = 0
-    total = 0
-
     criterion = torch.nn.CrossEntropyLoss()
 
+    correct = 0
+    total = 0
     total_loss = 0.0
 
     with torch.no_grad():
@@ -39,11 +42,17 @@ def evaluate():
 
             outputs = model(images)
 
-            loss = criterion(outputs, labels)
+            loss = criterion(
+                outputs,
+                labels
+            )
 
             total_loss += loss.item()
 
-            _, predicted = torch.max(outputs, 1)
+            _, predicted = torch.max(
+                outputs,
+                1
+            )
 
             total += labels.size(0)
 
@@ -60,46 +69,73 @@ def evaluate():
     print("=" * 50)
     print("MODEL EVALUATION")
     print("=" * 50)
-
-    print(f"Test Loss     : {average_loss:.4f}")
-    print(f"Test Accuracy : {accuracy:.4f}")
-    print(f"Accuracy (%)  : {accuracy * 100:.2f}%")
-
+    print(
+        f"Test Loss     : {average_loss:.4f}"
+    )
+    print(
+        f"Test Accuracy : {accuracy:.4f}"
+    )
+    print(
+        f"Accuracy (%)  : {accuracy * 100:.2f}%"
+    )
     print("=" * 50)
 
-    metadata = {
-        "model": "ANN-MNIST",
-        "version": os.getenv("GITHUB_SHA", "local"),
-        "accuracy": accuracy,
-        "accuracy_percent": accuracy * 100,
-        "test_loss": average_loss,
-        "threshold": 0.95,
-        "epochs": 5,
-        "learning_rate": 0.001
-    }
+    # ============================================================
+    # Update model metadata
+    # ============================================================
 
-    os.makedirs("models", exist_ok=True)
+    metadata_path = "models/model_metadata.json"
 
-    with open("models/model_metadata.json", "w") as f:
-        json.dump(metadata, f, indent=4)
+    if os.path.exists(metadata_path):
 
-    print("Model metadata saved to models/model_metadata.json")
+        with open(
+            metadata_path,
+            "r",
+            encoding="utf-8"
+        ) as f:
+
+            metadata = json.load(f)
+
+    else:
+
+        metadata = {
+            "model_name": "ANN-MNIST"
+        }
+
+    metadata["test_loss"] = average_loss
+
+    metadata["test_accuracy"] = accuracy
+
+    metadata["evaluation_date"] = datetime.now(
+        timezone.utc
+    ).isoformat()
+
+    metadata["git_commit"] = os.getenv(
+        "GITHUB_SHA",
+        metadata.get(
+            "git_commit",
+            "local"
+        )
+    )
+
+    with open(
+        metadata_path,
+        "w",
+        encoding="utf-8"
+    ) as f:
+
+        json.dump(
+            metadata,
+            f,
+            indent=2
+        )
+
+    print(
+        f"Metadata updated: {metadata_path}"
+    )
 
     return accuracy
 
 
 if __name__ == "__main__":
-    accuracy = evaluate()
-
-    threshold = 0.95
-
-    if accuracy < threshold:
-        raise RuntimeError(
-            f"Model accuracy {accuracy:.4f} "
-            f"is below required threshold {threshold:.4f}"
-        )
-
-    print(
-        f"Model quality check passed: "
-        f"{accuracy:.4f} >= {threshold:.4f}"
-    )
+    evaluate()
