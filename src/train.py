@@ -8,6 +8,27 @@ from torch.utils.data import DataLoader
 from model import ANN
 from data import get_datasets
 
+def get_model_version():
+    version_file = "VERSION"
+
+    if not os.path.exists(version_file):
+        raise FileNotFoundError(
+            "VERSION file not found"
+        )
+
+    with open(
+        version_file,
+        "r",
+        encoding="utf-8"
+    ) as f:
+        version = f.read().strip()
+
+    if not version:
+        raise ValueError(
+            "VERSION file is empty"
+        )
+
+    return version
 
 def train():
     train_dataset, _ = get_datasets()
@@ -80,10 +101,7 @@ def train():
     metadata = {
         "model_name": "ANN-MNIST",
 
-        "model_version": os.getenv(
-            "MODEL_VERSION",
-            "dev"
-        ),
+        "model_version": get_model_version(),
 
         "git_commit": os.getenv(
             "GITHUB_SHA",
