@@ -53,7 +53,8 @@ class PredictionRequest(BaseModel):
 def root():
     return {
         "status": "running",
-        "model": "ANN-MNIST"
+        "model": "ANN-MNIST",
+        "version": "1.1.0"
     }
 
 
